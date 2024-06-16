@@ -1,62 +1,61 @@
 package info.heitor.nutriflex.service;
 
 import info.heitor.nutriflex.model.Produto;
+import info.heitor.nutriflex.repository.ProdutoRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Optional;
 
 @Service
-public class ProdutoService {
+@RequiredArgsConstructor
+public class ProdutoService implements IProdutoService {
 
-    private List<Produto> produtos = new ArrayList<>();
+    private final ProdutoRepository produtoRepository;
 
-    public List<Produto> listarTodos() {
-        return new ArrayList<>(produtos);
+    @Override
+    public List<Produto> listarTodosProdutos() {
+        return produtoRepository.findAll();
     }
 
-    public Produto salvar(Produto produto) {
-        if (produto.getId() == null || produto.getId() <= 0) {
-            throw new IllegalArgumentException("id inválido!");
-        }
+    @Override
+    public Produto salvarProduto(Produto produto) {
         validarProduto(produto);
-        produtos.add(produto);
-        return produto;
+        return produtoRepository.save(produto);
     }
 
-    public Produto encontrarPorId(Long id) {
+    @Override
+    public Optional<Produto> encontrarProdutoPorId(Long id) {
         if (id <= 0) {
-            throw new IllegalArgumentException("id inválido!");
+            throw new IllegalArgumentException("ID inválido!");
         }
-        return produtos.stream().filter(p -> p.getId().equals(id)).findFirst().orElseThrow(() -> new NoSuchElementException("Produto de id:" + id + " não encontrado"));
+        return produtoRepository.findById(id);
     }
 
-    public void deletarPorId(Long id) {
-        if (!produtos.removeIf(p -> p.getId().equals(id))) {
+    @Override
+    public void deletarProdutoPorId(Long id) {
+        if (!produtoRepository.existsById(id)) {
             throw new NoSuchElementException("Produto não encontrado");
         }
+        produtoRepository.deleteById(id);
     }
 
-    public Produto atualizar(Long id, Produto produtoAtualizado) {
+    @Override
+    public Produto atualizarProduto(Long id, Produto produtoAtualizado) {
         if (id == null || id <= 0) {
-            throw new IllegalArgumentException("id inválido!");
+            throw new IllegalArgumentException("ID inválido!");
         }
         validarProduto(produtoAtualizado);
-        for (int i = 0; i < produtos.size(); i++) {
-            Produto produtoExistente = produtos.get(i);
-            if (produtoExistente.getId().equals(id)) {
-                produtoAtualizado.setId(id);
-                produtos.set(i, produtoAtualizado);
-                return produtoAtualizado;
-            }
-        }
-        throw new NoSuchElementException("Produto de id:" + id + " não encontrado");
+        Produto produtoExistente = produtoRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Produto de ID: " + id + " não encontrado"));
+        produtoAtualizado.setId(id);
+        return produtoRepository.save(produtoAtualizado);
     }
 
-    public void validarProduto(Produto produto) {
+    private void validarProduto(Produto produto) {
         if (produto.getNome() == null || produto.getNome().isEmpty()) {
             throw new IllegalArgumentException("Nome do produto não pode estar em branco");
         }
