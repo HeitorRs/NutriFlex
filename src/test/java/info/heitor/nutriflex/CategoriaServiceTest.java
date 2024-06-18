@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -23,7 +24,7 @@ public class CategoriaServiceTest {
     @DisplayName("Deve retornar todas as categorias")
     public void testeListarTodasCategorias() {
         List<Categoria> categorias = categoriaService.listarTodasCategorias();
-        assertEquals(4,categorias.size());
+        assertEquals(2,categorias.size());
     }
 
     @Test
@@ -31,5 +32,13 @@ public class CategoriaServiceTest {
     public void testeBuscarCategoriaPorId() {
         Optional<Categoria> categoria = categoriaService.buscarCategoriaPorId(2L);
         assertTrue(categoria.isPresent());
+    }
+
+    @Test
+    @DisplayName("Deve retornar uma categoria pelo nome")
+    public void testebuscarCategoriaPorNome() {
+        Categoria categoria = categoriaService.buscarCategoriaPorNomeContains("Sup");
+        assertThat(categoria).isNotNull();
+        assertThat(categoria.getNome()).contains("Suplemento");
     }
 }

@@ -1,12 +1,19 @@
 package info.heitor.nutriflex.service;
 
+import info.heitor.nutriflex.Filters.ProdutoFiltros;
 import info.heitor.nutriflex.model.Produto;
 import info.heitor.nutriflex.repository.ProdutoRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -16,6 +23,29 @@ import java.util.Optional;
 public class ProdutoService implements IProdutoService {
 
     private final ProdutoRepository produtoRepository;
+    private final EntityManager entityManager;
+
+    @Override
+    public List<Produto> buscarFiltros(ProdutoFiltros filtros) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Produto> cq = cb.createQuery(Produto.class);
+        Root<Produto> produto = cq.from(Produto.class);
+        List<Predicate> predicates = new ArrayList<>();
+
+        if(filtros.getNome().isPresent()) {
+            String query = filtros.getNome().get() + "%";
+            Predicate nome = cb.like(produto.get("nome"),query);
+            predicates.add(nome);
+        }
+        if(filtros.getCategoria().isPresent()) {
+            Predicate categoria = cb.equal(produto.get("categoria"),filtros.getCategoria().get());
+            predicates.add(categoria);
+        }
+        Predicate[] array = predicates.toArray(Predicate[]::new);
+        cq.where(array);
+        List<Produto> resultList = entityManager.createQuery(cq).getResultList();
+        return resultList;
+    }
 
     @Override
     public List<Produto> listarTodosProdutos() {

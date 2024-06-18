@@ -10,4 +10,8 @@ public interface ICategoriaService {
     List<Categoria> listarTodasCategorias();
 
     Optional<Categoria> buscarCategoriaPorId(Long id);
+
+    Categoria buscarCategoriaPorNome(String nome);
+
+    Categoria buscarCategoriaPorNomeContains(String text);
 }

@@ -1,5 +1,6 @@
 package info.heitor.nutriflex.service;
 
+import info.heitor.nutriflex.Filters.ProdutoFiltros;
 import info.heitor.nutriflex.model.Produto;
 
 import java.util.List;
@@ -17,4 +18,5 @@ public interface IProdutoService {
 
     public Produto atualizarProduto(Long id, Produto produtoAtualizado);
 
+    List<Produto> buscarFiltros(ProdutoFiltros filtros) ;
 }

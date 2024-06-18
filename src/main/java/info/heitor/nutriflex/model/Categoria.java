@@ -1,7 +1,6 @@
 package info.heitor.nutriflex.model;
 
 import jakarta.persistence.*;
-import jdk.jshell.Snippet;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,5 +14,4 @@ public class Categoria {
     @Id@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String nome;
-
 }

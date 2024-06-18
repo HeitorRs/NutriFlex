@@ -6,6 +6,7 @@ import info.heitor.nutriflex.service.ProdutoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +17,10 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/produtos")
+@RequiredArgsConstructor
 public class ProdutoController {
 
-    @Autowired
-    private ProdutoService produtoService;
-
+    private final ProdutoService produtoService;
 
     @Operation(summary = "Lista todos os produtos")
     @ApiResponses(value = {

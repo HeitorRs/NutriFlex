@@ -3,7 +3,6 @@ package info.heitor.nutriflex.service;
 import info.heitor.nutriflex.model.Categoria;
 import info.heitor.nutriflex.repository.CategoriaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,5 +22,15 @@ public class CategoriaService implements ICategoriaService {
     @Override
     public Optional<Categoria> buscarCategoriaPorId(Long id) {
         return categoriaRepository.findById(id);
+    }
+
+    @Override
+    public Categoria buscarCategoriaPorNome(String nome) {
+        return categoriaRepository.findByNome(nome);
+    }
+
+    @Override
+    public Categoria buscarCategoriaPorNomeContains(String text) {
+        return categoriaRepository.findByNomeContains(text);
     }
 }

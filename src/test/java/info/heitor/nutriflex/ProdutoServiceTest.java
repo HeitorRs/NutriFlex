@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,20 +23,22 @@ public class ProdutoServiceTest {
     private CategoriaService categoriaService;
 
     @Test
-    @DisplayName("Deve inserir um produtos")
-    public void testInsert() {
+    @DisplayName("Deve inserir um produto")
+    public void testSalvarProduto() {
         List<Produto> produtos = produtoService.listarTodosProdutos();
         int quantidade = produtos.size();
+
         Produto produto = new Produto();
         produto.setNome("Creatina");
-        produto.setDescricao("Creatina da melhor qualidade com dawdawd");
+        produto.setDescricao("Creatina com a melhor qualidade do mercado");
         produto.setPreco(new BigDecimal("89.90"));
         produto.setEstoque(200);
-        Categoria categoria = new Categoria();
-        categoria.setId(1L);
-        categoria.setNome("Suplemento");
+
+        Categoria categoria = categoriaService.buscarCategoriaPorId(1L).orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada"));
         produto.setCategoria(categoria);
+
         produtoService.salvarProduto(produto);
+
         produtos = produtoService.listarTodosProdutos();
         int quantidadeFinal = produtos.size();
         assertEquals(quantidade + 1, quantidadeFinal);
