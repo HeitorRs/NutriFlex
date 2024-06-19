@@ -29,5 +29,4 @@ public class Pedido {
             inverseJoinColumns = @JoinColumn(name = "produto_id")
     )
     private List<Produto> produtos = new ArrayList<>();
-
 }

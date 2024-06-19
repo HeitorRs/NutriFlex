@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -21,6 +22,9 @@ public class CategoriaService implements ICategoriaService {
 
     @Override
     public Optional<Categoria> buscarCategoriaPorId(Long id) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("ID inválido!");
+        }
         return categoriaRepository.findById(id);
     }
 
@@ -37,5 +41,26 @@ public class CategoriaService implements ICategoriaService {
     @Override
     public void salvarCategoria(Categoria categoria) {
         categoriaRepository.save(categoria);
+    }
+
+    @Override
+    public void deletarCategoriaPorId(Long id) {
+        if (!categoriaRepository.existsById(id)) {
+            throw new NoSuchElementException("Categoria não encontrada");
+        }
+        categoriaRepository.deleteById(id);
+    }
+
+    @Override
+    public Categoria atualizarCategoria(Long id, Categoria categoriaAtualizada) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("ID inválido!");
+        }
+
+        Categoria categoriaExistente = categoriaRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Categoria de ID: " + id + " não encontrada"));
+
+        categoriaExistente.setNome(categoriaAtualizada.getNome());
+        return categoriaRepository.save(categoriaExistente);
     }
 }

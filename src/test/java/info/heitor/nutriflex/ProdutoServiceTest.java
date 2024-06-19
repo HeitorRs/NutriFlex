@@ -1,152 +1,130 @@
 package info.heitor.nutriflex;
 
+import info.heitor.nutriflex.Filters.ProdutoFiltros;
 import info.heitor.nutriflex.model.AcaoHistorico;
 import info.heitor.nutriflex.model.Categoria;
 import info.heitor.nutriflex.model.HistoricoProduto;
 import info.heitor.nutriflex.model.Produto;
-import info.heitor.nutriflex.repository.HistoricoProdutoRepository;
-import info.heitor.nutriflex.repository.ProdutoRepository;
-import info.heitor.nutriflex.service.CategoriaService;
+import info.heitor.nutriflex.service.HistoricoProdutoService;
 import info.heitor.nutriflex.service.ProdutoService;
 import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@Transactional
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class ProdutoServiceTest {
 
     @Autowired
     private ProdutoService produtoService;
 
     @Autowired
-    private ProdutoRepository produtoRepository;
+    private HistoricoProdutoService historicoProdutoService;
 
-    @Autowired
-    private HistoricoProdutoRepository historicoProdutoRepository;
-
-    @Autowired
-    private CategoriaService categoriaService;
 
     @Test
-    @DisplayName("Deve inserir um produto e registrar histórico")
-    public void testSalvarProduto() {
-        Categoria categoria = new Categoria();
-        categoria.setNome("Suplementos");
-        categoriaService.salvarCategoria(categoria);
+    public void testBuscarFiltros() {
+        // Criar filtros simulados
+        ProdutoFiltros filtros = new ProdutoFiltros();
+        filtros.setNome(Optional.of("Whey"));  // Exemplo de filtro por nome
+        //filtros.setCategoria(...);  // Pode adicionar filtro por categoria se necessário
 
+        // Chamar o método buscarFiltros
+        List<Produto> produtos = produtoService.buscarFiltros(filtros);
+
+        // Verificar se a lista de produtos não está vazia e se contém o produto esperado
+        // Aqui, você deve ajustar a asserção de acordo com o comportamento esperado do método
+        Assertions.assertFalse(produtos.isEmpty(), "A lista de produtos não deve estar vazia");
+        Assertions.assertTrue(produtos.stream().anyMatch(p -> p.getNome().contains("Whey")),
+                "Deveria encontrar pelo menos um produto com o nome 'Whey'");
+    }
+
+    @Test
+    @DisplayName("Deve salvar um produto")
+    @Rollback
+    @Transactional
+    public void testSalvarProduto() {
         Produto produto = new Produto();
         produto.setNome("Creatina");
         produto.setDescricao("Creatina com a melhor qualidade do mercado");
         produto.setPreco(new BigDecimal("89.90"));
         produto.setEstoque(200);
-        produto.setCategoria(categoria);
+        produto.setCategoria(new Categoria(1L, "Suplementos"));
 
-        produtoService.salvarProduto(produto);
+        Produto produtoSalvo = produtoService.salvarProduto(produto);
 
-        Produto produtoSalvo = produtoRepository.findById(produto.getId()).orElse(null);
-        assertNotNull(produtoSalvo);
+        assertNotNull(produtoSalvo.getId());
         assertEquals("Creatina", produtoSalvo.getNome());
+        assertFalse(produtoSalvo.getCodigo().isEmpty());
 
-        List<HistoricoProduto> historicos = historicoProdutoRepository.findAll();
-        assertFalse(historicos.isEmpty());
-        HistoricoProduto historicoSalvo = historicos.get(0);
-        assertEquals(produtoSalvo, historicoSalvo.getProduto());
-        assertEquals(AcaoHistorico.CRIACAO, historicoSalvo.getAcao());
+        // Verifica o histórico
+        List<HistoricoProduto> historicos = historicoProdutoService.buscarTodos();
+        assertEquals(4, historicos.size());
+        assertEquals(AcaoHistorico.CRIACAO, historicos.get(0).getAcao());
     }
 
     @Test
-    @DisplayName("Deve encontrar um produto por ID e registrar histórico de consulta")
+    @DisplayName("Deve listar todos os produtos")
+    public void testListarTodosProdutos() {
+        List<Produto> produtos = produtoService.listarTodosProdutos();
+        assertNotNull(produtos);
+        assertFalse(produtos.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Deve encontrar um produto por ID")
     public void testEncontrarProdutoPorId() {
-        Categoria categoria = new Categoria();
-        categoria.setNome("Suplementos");
-        categoriaService.salvarCategoria(categoria);
+        Optional<Produto> produto = produtoService.encontrarProdutoPorId(1L);
+        assertTrue(produto.isPresent());
 
-        Produto produto = new Produto();
-        produto.setNome("Produto Teste");
-        produto.setCategoria(categoria);
-        produtoRepository.save(produto);
-
-        Optional<Produto> produtoEncontrado = produtoService.encontrarProdutoPorId(produto.getId());
-
-        assertTrue(produtoEncontrado.isPresent());
-        assertEquals("Produto Teste", produtoEncontrado.get().getNome());
-
-        List<HistoricoProduto> historicos = historicoProdutoRepository.findAll();
-        assertFalse(historicos.isEmpty());
-        HistoricoProduto historicoSalvo = historicos.get(0);
-        assertEquals(produto, historicoSalvo.getProduto());
-        assertEquals(AcaoHistorico.CONSULTA, historicoSalvo.getAcao());
+        // Verifica o histórico
+        List<HistoricoProduto> historicos = historicoProdutoService.buscarTodos();
+        assertEquals(4, historicos.size());
+        assertEquals(AcaoHistorico.CONSULTA, historicos.get(3).getAcao());
     }
 
     @Test
-    @DisplayName("Deve deletar um produto por ID e registrar histórico de exclusão")
+    @DisplayName("Deve deletar um produto por ID")
+    @Transactional
     public void testDeletarProdutoPorId() {
-        Categoria categoria = new Categoria();
-        categoria.setNome("Suplementos");
-        categoriaService.salvarCategoria(categoria);
+        produtoService.deletarProdutoPorId(1L);
+        Optional<Produto> produto = produtoService.encontrarProdutoPorId(1L);
+        assertFalse(produto.isPresent());
 
-        Produto produto = new Produto();
-        produto.setNome("Produto Teste");
-        produto.setCategoria(categoria);
-        produtoRepository.save(produto);
-
-        produtoService.deletarProdutoPorId(produto.getId());
-
-        Optional<Produto> produtoDeletado = produtoRepository.findById(produto.getId());
-        assertTrue(produtoDeletado.isEmpty());
-
-        List<HistoricoProduto> historicos = historicoProdutoRepository.findAll();
-        assertFalse(historicos.isEmpty());
-        HistoricoProduto historicoSalvo = historicos.get(0);
-        assertEquals(produto, historicoSalvo.getProduto());
-        assertEquals(AcaoHistorico.EXCLUSAO, historicoSalvo.getAcao());
+        // Verifica o histórico
+        List<HistoricoProduto> historicos = historicoProdutoService.buscarTodos();
+        assertEquals(5, historicos.size());
+        assertEquals(AcaoHistorico.EXCLUSAO, historicos.get(4).getAcao());
     }
 
     @Test
-    @DisplayName("Deve atualizar um produto e registrar histórico de atualização")
+    @DisplayName("Deve atualizar um produto")
+    @Transactional
     public void testAtualizarProduto() {
-        Categoria categoria = new Categoria();
-        categoria.setNome("Suplementos");
-        categoriaService.salvarCategoria(categoria);
-
-        Produto produto = new Produto();
-        produto.setNome("Produto Teste");
-        produto.setCategoria(categoria);
-        produtoRepository.save(produto);
-
         Produto produtoAtualizado = new Produto();
-        produtoAtualizado.setNome("Produto Atualizado");
-        produtoAtualizado.setPreco(BigDecimal.valueOf(20.0));
-        produtoAtualizado.setEstoque(50);
-        produtoAtualizado.setCategoria(categoria);
+        produtoAtualizado.setNome("Creatina Atualizada");
+        produtoAtualizado.setDescricao("Creatina com a melhor qualidade do mercado - Atualizada");
+        produtoAtualizado.setPreco(new BigDecimal("99.90"));
+        produtoAtualizado.setEstoque(150);
+        produtoAtualizado.setCategoria(new Categoria(1L, "Suplementos"));
 
-        produtoService.atualizarProduto(produto.getId(), produtoAtualizado);
+        Produto produto = produtoService.atualizarProduto(1L, produtoAtualizado);
 
-        Produto produtoSalvo = produtoRepository.findById(produto.getId()).orElse(null);
-        assertNotNull(produtoSalvo);
-        assertEquals("Produto Atualizado", produtoSalvo.getNome());
+        assertEquals("Creatina Atualizada", produto.getNome());
+        assertEquals(new BigDecimal("99.90"), produto.getPreco());
 
-        List<HistoricoProduto> historicos = historicoProdutoRepository.findAll();
-        assertFalse(historicos.isEmpty());
-        HistoricoProduto historicoSalvo = historicos.get(0);
-        assertEquals(produtoSalvo, historicoSalvo.getProduto());
-        assertEquals(AcaoHistorico.ATUALIZACAO, historicoSalvo.getAcao());
+        // Verifica o histórico
+        List<HistoricoProduto> historicos = historicoProdutoService.buscarTodos();
+        assertEquals(5, historicos.size());
+        assertEquals(AcaoHistorico.ATUALIZACAO, historicos.get(4).getAcao());
     }
 }

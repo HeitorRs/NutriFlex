@@ -27,6 +27,7 @@ public class ProdutoService implements IProdutoService {
     private final HistoricoProdutoRepository historicoProdutoRepository;
     private final EntityManager entityManager;
 
+
     @Override
     public List<Produto> buscarFiltros(ProdutoFiltros filtros) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -34,15 +35,17 @@ public class ProdutoService implements IProdutoService {
         Root<Produto> produto = cq.from(Produto.class);
         List<Predicate> predicates = new ArrayList<>();
 
-        if(filtros.getNome().isPresent()) {
+        if (filtros.getNome().isPresent()) {
             String query = filtros.getNome().get() + "%";
-            Predicate nome = cb.like(produto.get("nome"),query);
+            Predicate nome = cb.like(produto.get("nome"), query);
             predicates.add(nome);
         }
-        if(filtros.getCategoria().isPresent()) {
-            Predicate categoria = cb.equal(produto.get("categoria"),filtros.getCategoria().get());
+
+        if (filtros.getCategoria() != null && filtros.getCategoria().isPresent()) {
+            Predicate categoria = cb.equal(produto.get("categoria"), filtros.getCategoria().get());
             predicates.add(categoria);
         }
+
         Predicate[] array = predicates.toArray(Predicate[]::new);
         cq.where(array);
         List<Produto> resultList = entityManager.createQuery(cq).getResultList();
