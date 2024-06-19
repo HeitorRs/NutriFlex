@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Data
@@ -29,5 +31,15 @@ public class Produto {
     @ManyToOne
     @JoinColumn(name = "categoria_id")
     private Categoria categoria;
+
+    @NotBlank
+    @Column(nullable = false, unique = true)
+    private String codigo;
+
+    @PrePersist
+    public void prePersist() {
+        // Gera o código automaticamente usando um UUID
+        this.codigo = "PROD-" + UUID.randomUUID().toString();
+    }
 
 }

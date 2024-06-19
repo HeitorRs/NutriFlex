@@ -14,4 +14,6 @@ public interface ICategoriaService {
     Categoria buscarCategoriaPorNome(String nome);
 
     Categoria buscarCategoriaPorNomeContains(String text);
+
+    void salvarCategoria(Categoria categoria);
 }

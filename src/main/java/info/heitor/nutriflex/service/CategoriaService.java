@@ -33,4 +33,9 @@ public class CategoriaService implements ICategoriaService {
     public Categoria buscarCategoriaPorNomeContains(String text) {
         return categoriaRepository.findByNomeContains(text);
     }
+
+    @Override
+    public void salvarCategoria(Categoria categoria) {
+        categoriaRepository.save(categoria);
+    }
 }
